@@ -251,7 +251,7 @@ function makeCard(b) {
   if (b.author) {
     const a = document.createElement('div');
     a.className = 'author' + (isHebrew(b.author) ? '' : ' ltr');
-    a.textContent = b.author;
+    a.textContent = b.author + (b.year ? ' \u00B7 ' + b.year : '');
     body.appendChild(a);
   }
   if (b.blurb) {
