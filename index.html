@@ -115,6 +115,8 @@ section.category > h2 .count { font-weight: 400; font-size: .85rem; color: var(-
 .note { font-size: .8rem; color: var(--ink-soft); flex: 1; }
 .card-foot { margin-top: 8px; }
 .card-foot audio { width: 100%; height: 34px; display: block; }
+.card-foot .read-text { display: inline-block; margin-top: 6px; font-size: 13px; color: #1a3a5c; text-decoration: none; border: 1px solid #1a3a5c; border-radius: 14px; padding: 3px 12px; background: #fff; }
+.card-foot .read-text:hover { background: #1a3a5c; color: #fff; }
 .badge-soon {
   display: inline-block;
   background: var(--accent-soft);
@@ -257,6 +259,11 @@ function makeCard(b) {
     audio.preload = 'none';
     audio.src = AUDIO_BASE + b.audio;
     foot.appendChild(audio);
+    const rt = document.createElement('a');
+    rt.className = 'read-text';
+    rt.href = 'text/' + b.audio.replace(/\.mp3$/, '.html');
+    rt.textContent = '📖 קראו את התקציר המלא';
+    foot.appendChild(rt);
   } else {
     const badge = document.createElement('span');
     badge.className = 'badge-soon';
