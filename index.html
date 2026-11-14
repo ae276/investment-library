@@ -155,6 +155,7 @@ footer {
     <input id="search" type="search" placeholder="חיפוש ספר, מחבר או נושא..." autocomplete="off">
   </div>
   <div class="filter-row">
+    <button id="recorded-toggle" class="filter-toggle" type="button">רק ספרים עם הקלטה</button>
     <button id="unlistened-toggle" class="filter-toggle" type="button">רק מה שלא האזנתי</button>
   </div>
   <div class="chips" id="chips"></div>
@@ -179,6 +180,7 @@ let listenedSet = new Set();
 try { listenedSet = new Set(JSON.parse(localStorage.getItem(LISTENED_KEY) || '[]')); } catch (e) {}
 function saveListened() { try { localStorage.setItem(LISTENED_KEY, JSON.stringify([...listenedSet])); } catch (e) {} }
 let hideListened = false;
+let hideUnrecorded = false;
 
 const isHebrew = s => /[\u0590-\u05ff]/.test(s || '');
 
@@ -372,6 +374,12 @@ unlistenedBtn.addEventListener('click', () => {
   unlistenedBtn.classList.toggle('active', hideListened);
   applyFilter();
 });
+const recordedBtn = document.getElementById('recorded-toggle');
+recordedBtn.addEventListener('click', () => {
+  hideUnrecorded = !hideUnrecorded;
+  recordedBtn.classList.toggle('active', hideUnrecorded);
+  applyFilter();
+});
 
 function applyFilter() {
   const q = searchEl.value.trim().toLowerCase();
@@ -380,7 +388,7 @@ function applyFilter() {
     if (activeCat && sec.dataset.cat !== activeCat) { sec.classList.add('hidden'); return; }
     let visible = 0;
     sec.querySelectorAll('.card').forEach(card => {
-      const show = (!q || card.dataset.search.includes(q)) && !(hideListened && listenedSet.has(+card.dataset.id));
+      const show = (!q || card.dataset.search.includes(q)) && !(hideListened && listenedSet.has(+card.dataset.id)) && !(hideUnrecorded && !AVAILABLE.has(+card.dataset.id));
       card.classList.toggle('hidden', !show);
       if (show) visible++;
     });
