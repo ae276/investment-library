@@ -248,7 +248,7 @@ function makeCard(b) {
     const audio = document.createElement('audio');
     audio.controls = true;
     audio.preload = 'none';
-    audio.src = audioFile(b.id);
+    audio.src = AUDIO_BASE + b.audio;
     foot.appendChild(audio);
   } else {
     const badge = document.createElement('span');
