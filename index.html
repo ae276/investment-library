@@ -315,8 +315,8 @@ function updateStats() {
     (listenedSet.size ? ' · ' + listenedSet.size + ' סומנו כהאזנה' : '');
 }
 
-// ---------- covers: Open Library, lazy + cached ----------
-const COVER_CACHE_KEY = 'olcovers_v1';
+// ---------- covers: Open Library + Google Books fallback, lazy + cached ----------
+const COVER_CACHE_KEY = 'olcovers_v2';
 let coverCache = {};
 try { coverCache = JSON.parse(localStorage.getItem(COVER_CACHE_KEY) || '{}'); } catch (e) {}
 
@@ -340,18 +340,40 @@ async function loadCover(coverEl) {
   const id = coverEl.dataset.bid;
   if (coverCache[id] === undefined) {
     let url = null;
+    const title = coverEl.dataset.book.replace(/\(.*?\)/g, '').trim();
+    const author = coverEl.dataset.author.replace(/\(.*?\)/g, '').replace(/ואחרים|עורך/g, '').trim();
+    const latinAuthor = author && !isHebrew(author) ? author : null;
+    // 1) Open Library: title + author
     try {
-      const q = new URLSearchParams({ limit: '1', fields: 'cover_i' });
-      const title = coverEl.dataset.book.replace(/\(.*?\)/g, '').trim();
-      q.set('title', title);
-      const author = coverEl.dataset.author.replace(/\(.*?\)/g, '').replace(/ואחרים|עורך/g, '').trim();
-      if (author && !isHebrew(author)) q.set('author', author);
-      const r = await fetch('https://openlibrary.org/search.json?' + q.toString());
-      const j = await r.json();
+      const q = new URLSearchParams({ limit: '1', fields: 'cover_i', title });
+      if (latinAuthor) q.set('author', latinAuthor);
+      const j = await (await fetch('https://openlibrary.org/search.json?' + q)).json();
       if (j.docs && j.docs[0] && j.docs[0].cover_i) {
         url = 'https://covers.openlibrary.org/b/id/' + j.docs[0].cover_i + '-M.jpg';
       }
     } catch (e) {}
+    // 2) Open Library: title only
+    if (!url) {
+      try {
+        const q = new URLSearchParams({ limit: '1', fields: 'cover_i', title });
+        const j = await (await fetch('https://openlibrary.org/search.json?' + q)).json();
+        if (j.docs && j.docs[0] && j.docs[0].cover_i) {
+          url = 'https://covers.openlibrary.org/b/id/' + j.docs[0].cover_i + '-M.jpg';
+        }
+      } catch (e) {}
+    }
+    // 3) Google Books
+    if (!url) {
+      try {
+        let g = 'intitle:' + title;
+        if (latinAuthor) g += ' inauthor:' + latinAuthor;
+        const j = await (await fetch('https://www.googleapis.com/books/v1/volumes?maxResults=1&fields=items(volumeInfo(imageLinks))&q=' + encodeURIComponent(g))).json();
+        const il = j.items && j.items[0] && j.items[0].volumeInfo && j.items[0].volumeInfo.imageLinks;
+        if (il && (il.thumbnail || il.smallThumbnail)) {
+          url = (il.thumbnail || il.smallThumbnail).replace('http://', 'https://');
+        }
+      } catch (e) {}
+    }
     coverCache[id] = url;
     try { localStorage.setItem(COVER_CACHE_KEY, JSON.stringify(coverCache)); } catch (e) {}
   }
