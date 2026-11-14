@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ספריית ההשקעות המוקלטת</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f6f3ee;
+  --card: #ffffff;
+  --ink: #1e2430;
+  --ink-soft: #5c6470;
+  --accent: #8a5a2b;
+  --accent-soft: #f0e6d8;
+  --line: #e6e0d5;
+  --shadow: 0 1px 3px rgba(30,36,48,.08), 0 6px 18px rgba(30,36,48,.06);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Heebo', sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  line-height: 1.55;
+}
+header.top {
+  background: linear-gradient(160deg, #2b2118 0%, #4a3421 60%, #6b4a2a 100%);
+  color: #f5efe6;
+  padding: 48px 20px 36px;
+  text-align: center;
+}
+header.top h1 { font-size: 2.2rem; font-weight: 900; letter-spacing: .5px; }
+header.top p { margin-top: 10px; font-weight: 300; font-size: 1.05rem; opacity: .85; }
+header.top .stats { margin-top: 16px; font-size: .85rem; opacity: .7; }
+
+.toolbar {
+  position: sticky; top: 0; z-index: 50;
+  background: rgba(246,243,238,.92);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--line);
+  padding: 12px 16px;
+}
+.search-wrap { max-width: 640px; margin: 0 auto 10px; }
+#search {
+  width: 100%; padding: 10px 16px;
+  border: 1px solid var(--line); border-radius: 999px;
+  font: inherit; font-size: .95rem; background: #fff;
+  outline: none;
+}
+#search:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.chips {
+  display: flex; gap: 8px; overflow-x: auto; padding: 2px 4px 6px;
+  scrollbar-width: thin;
+}
+.chip {
+  flex: 0 0 auto;
+  border: 1px solid var(--line);
+  background: #fff;
+  border-radius: 999px;
+  padding: 5px 14px;
+  font: inherit; font-size: .82rem;
+  color: var(--ink-soft);
+  cursor: pointer;
+  transition: all .15s;
+  white-space: nowrap;
+}
+.chip:hover { border-color: var(--accent); color: var(--accent); }
+.chip.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+main { max-width: 1280px; margin: 0 auto; padding: 28px 16px 80px; }
+section.category { margin-bottom: 44px; }
+section.category > h2 {
+  font-size: 1.35rem; font-weight: 700;
+  padding-bottom: 8px; margin-bottom: 18px;
+  border-bottom: 2px solid var(--accent-soft);
+  color: var(--ink);
+}
+section.category > h2 .count { font-weight: 400; font-size: .85rem; color: var(--ink-soft); margin-right: 8px; }
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 18px;
+}
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  display: flex; flex-direction: column;
+  transition: transform .15s, box-shadow .15s;
+}
+.card:hover { transform: translateY(-3px); box-shadow: 0 4px 8px rgba(30,36,48,.1), 0 12px 28px rgba(30,36,48,.1); }
+.cover {
+  position: relative;
+  aspect-ratio: 2 / 3;
+  background: linear-gradient(150deg, #6b4a2a, #3d2c1c);
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden;
+}
+.cover img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.cover .placeholder {
+  color: rgba(245,239,230,.9);
+  text-align: center; padding: 14px;
+  font-size: .85rem; font-weight: 500; line-height: 1.4;
+}
+.card-body { padding: 12px 14px 14px; display: flex; flex-direction: column; gap: 6px; flex: 1; }
+.card-body h3 { font-size: .95rem; font-weight: 700; line-height: 1.3; }
+.card-body h3.ltr { direction: ltr; text-align: right; }
+.card-body .author { font-size: .8rem; color: var(--accent); font-weight: 500; }
+.card-body .author.ltr { direction: ltr; text-align: right; }
+.card-body .note { font-size: .8rem; color: var(--ink-soft); flex: 1; }
+.card-foot { margin-top: 8px; }
+.card-foot audio { width: 100%; height: 34px; display: block; }
+.badge-soon {
+  display: inline-block;
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-radius: 999px;
+  font-size: .75rem; font-weight: 500;
+  padding: 4px 12px;
+}
+.hidden { display: none !important; }
+.no-results { text-align: center; color: var(--ink-soft); padding: 60px 0; font-size: 1.05rem; }
+footer {
+  text-align: center; color: var(--ink-soft); font-size: .8rem;
+  padding: 30px 16px; border-top: 1px solid var(--line);
+}
+@media (max-width: 600px) {
+  header.top h1 { font-size: 1.6rem; }
+  .grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+}
+</style>
+</head>
+<body>
+<header class="top">
+  <h1>ספריית ההשקעות המוקלטת</h1>
+  <p>סיכומים מוקלטים בעברית של ספרי ההשקעות, הכלכלה והעסקים החשובים</p>
+  <div class="stats" id="stats"></div>
+</header>
+
+<div class="toolbar">
+  <div class="search-wrap">
+    <input id="search" type="search" placeholder="חיפוש ספר, מחבר או נושא..." autocomplete="off">
+  </div>
+  <div class="chips" id="chips"></div>
+</div>
+
+<main id="main"></main>
+<div class="no-results hidden" id="noresults">לא נמצאו ספרים שמתאימים לחיפוש</div>
+
+<footer>
+  הסיכומים נכתבו והוקלטו במקור בעברית · העטיפות באדיבות Open Library · האתר מתעדכן ככל שמוקלטים ספרים נוספים
+</footer>
+
+<script src="books.js"></script>
+<script>
+const AUDIO_BASE = 'audio/';
+const audioFile = id => AUDIO_BASE + String(id).padStart(3, '0') + '.mp3';
+const AVAILABLE = new Set(BOOKS.filter(b => b.audio).map(b => b.id));
+
+const isHebrew = s => /[\u0590-\u05ff]/.test(s || '');
+
+// ---------- build category chips ----------
+const cats = [...new Set(BOOKS.map(b => b.cat))];
+const chipsEl = document.getElementById('chips');
+let activeCat = null;
+
+function renderChips() {
+  chipsEl.innerHTML = '';
+  const all = document.createElement('button');
+  all.className = 'chip' + (activeCat === null ? ' active' : '');
+  all.textContent = 'הכל (' + BOOKS.length + ')';
+  all.onclick = () => { activeCat = null; renderChips(); applyFilter(); };
+  chipsEl.appendChild(all);
+  cats.forEach(c => {
+    const n = BOOKS.filter(b => b.cat === c).length;
+    const chip = document.createElement('button');
+    chip.className = 'chip' + (activeCat === c ? ' active' : '');
+    chip.textContent = c.replace(/^\d+\.\s*/, '') + ' (' + n + ')';
+    chip.onclick = () => { activeCat = c; renderChips(); applyFilter(); };
+    chipsEl.appendChild(chip);
+  });
+}
+
+// ---------- build sections & cards ----------
+const mainEl = document.getElementById('main');
+const sectionEls = {};
+
+function buildPage() {
+  cats.forEach(cat => {
+    const sec = document.createElement('section');
+    sec.className = 'category';
+    sec.dataset.cat = cat;
+    const h2 = document.createElement('h2');
+    const n = BOOKS.filter(b => b.cat === cat).length;
+    h2.innerHTML = cat + '<span class="count">' + n + ' פריטים</span>';
+    sec.appendChild(h2);
+    const grid = document.createElement('div');
+    grid.className = 'grid';
+    BOOKS.filter(b => b.cat === cat).forEach(b => grid.appendChild(makeCard(b)));
+    sec.appendChild(grid);
+    mainEl.appendChild(sec);
+    sectionEls[cat] = sec;
+  });
+  document.getElementById('stats').textContent =
+    BOOKS.length + ' פריטים · ' + cats.length + ' קטגוריות · ' + AVAILABLE.size + ' הקלטות זמינות';
+}
+
+function makeCard(b) {
+  const card = document.createElement('article');
+  card.className = 'card';
+  card.dataset.id = b.id;
+  card.dataset.search = (b.book + ' ' + b.author + ' ' + b.note + ' ' + b.cat).toLowerCase();
+
+  const cover = document.createElement('div');
+  cover.className = 'cover';
+  const ph = document.createElement('div');
+  ph.className = 'placeholder';
+  ph.textContent = b.book;
+  cover.appendChild(ph);
+  card.appendChild(cover);
+  lazyCover(cover, b);
+
+  const body = document.createElement('div');
+  body.className = 'card-body';
+  const h3 = document.createElement('h3');
+  h3.textContent = b.book;
+  if (!isHebrew(b.book)) h3.classList.add('ltr');
+  body.appendChild(h3);
+  if (b.author) {
+    const a = document.createElement('div');
+    a.className = 'author' + (isHebrew(b.author) ? '' : ' ltr');
+    a.textContent = b.author;
+    body.appendChild(a);
+  }
+  if (b.note) {
+    const nt = document.createElement('div');
+    nt.className = 'note';
+    nt.textContent = b.note;
+    body.appendChild(nt);
+  }
+  const foot = document.createElement('div');
+  foot.className = 'card-foot';
+  if (AVAILABLE.has(b.id)) {
+    const audio = document.createElement('audio');
+    audio.controls = true;
+    audio.preload = 'none';
+    audio.src = audioFile(b.id);
+    foot.appendChild(audio);
+  } else {
+    const badge = document.createElement('span');
+    badge.className = 'badge-soon';
+    badge.textContent = '🎧 ההקלטה בהפקה';
+    foot.appendChild(badge);
+  }
+  body.appendChild(foot);
+  card.appendChild(body);
+  return card;
+}
+
+// ---------- covers: Open Library, lazy + cached ----------
+const COVER_CACHE_KEY = 'olcovers_v1';
+let coverCache = {};
+try { coverCache = JSON.parse(localStorage.getItem(COVER_CACHE_KEY) || '{}'); } catch (e) {}
+
+const coverObserver = new IntersectionObserver(entries => {
+  entries.forEach(en => {
+    if (en.isIntersecting) {
+      coverObserver.unobserve(en.target);
+      loadCover(en.target);
+    }
+  });
+}, { rootMargin: '300px' });
+
+function lazyCover(coverEl, b) {
+  coverEl.dataset.book = b.book;
+  coverEl.dataset.author = b.author || '';
+  coverEl.dataset.bid = b.id;
+  coverObserver.observe(coverEl);
+}
+
+async function loadCover(coverEl) {
+  const id = coverEl.dataset.bid;
+  if (coverCache[id] === undefined) {
+    let url = null;
+    try {
+      const q = new URLSearchParams({ limit: '1', fields: 'cover_i' });
+      const title = coverEl.dataset.book.replace(/\(.*?\)/g, '').trim();
+      q.set('title', title);
+      const author = coverEl.dataset.author.replace(/\(.*?\)/g, '').replace(/ואחרים|עורך/g, '').trim();
+      if (author && !isHebrew(author)) q.set('author', author);
+      const r = await fetch('https://openlibrary.org/search.json?' + q.toString());
+      const j = await r.json();
+      if (j.docs && j.docs[0] && j.docs[0].cover_i) {
+        url = 'https://covers.openlibrary.org/b/id/' + j.docs[0].cover_i + '-M.jpg';
+      }
+    } catch (e) {}
+    coverCache[id] = url;
+    try { localStorage.setItem(COVER_CACHE_KEY, JSON.stringify(coverCache)); } catch (e) {}
+  }
+  if (coverCache[id]) {
+    const img = document.createElement('img');
+    img.alt = '';
+    img.loading = 'lazy';
+    img.src = coverCache[id];
+    img.onerror = () => img.remove();
+    coverEl.appendChild(img);
+  }
+}
+
+// ---------- filter ----------
+const searchEl = document.getElementById('search');
+searchEl.addEventListener('input', applyFilter);
+
+function applyFilter() {
+  const q = searchEl.value.trim().toLowerCase();
+  let anyVisible = false;
+  Object.values(sectionEls).forEach(sec => {
+    if (activeCat && sec.dataset.cat !== activeCat) { sec.classList.add('hidden'); return; }
+    let visible = 0;
+    sec.querySelectorAll('.card').forEach(card => {
+      const show = !q || card.dataset.search.includes(q);
+      card.classList.toggle('hidden', !show);
+      if (show) visible++;
+    });
+    sec.classList.toggle('hidden', visible === 0);
+    if (visible > 0) anyVisible = true;
+  });
+  document.getElementById('noresults').classList.toggle('hidden', anyVisible);
+}
+
+renderChips();
+buildPage();
+</script>
+</body>
+</html>
