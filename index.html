@@ -117,6 +117,12 @@ section.category > h2 .count { font-weight: 400; font-size: .85rem; color: var(-
 .card-foot audio { width: 100%; height: 34px; display: block; }
 .card-foot .read-text { display: inline-block; margin-top: 6px; font-size: 13px; color: #1a3a5c; text-decoration: none; border: 1px solid #1a3a5c; border-radius: 14px; padding: 3px 12px; background: #fff; }
 .card-foot .read-text:hover { background: #1a3a5c; color: #fff; }
+.card-foot .listened-btn { display: inline-block; margin: 6px 8px 0 0; font: inherit; font-size: 12.5px; padding: 3px 12px; border-radius: 14px; border: 1px solid #999; background: #fff; color: #555; cursor: pointer; }
+.card-foot .listened-btn.active { border-color: #2e7d32; color: #2e7d32; background: #eef7ee; }
+.card.listened { opacity: .58; }
+.filter-row { max-width: 640px; margin: 0 auto 10px; display: flex; gap: 8px; justify-content: center; }
+.filter-toggle { font: inherit; font-size: 13px; padding: 5px 14px; border-radius: 16px; border: 1px solid #1a3a5c; background: #fff; color: #1a3a5c; cursor: pointer; }
+.filter-toggle.active { background: #1a3a5c; color: #fff; }
 .badge-soon {
   display: inline-block;
   background: var(--accent-soft);
@@ -148,6 +154,9 @@ footer {
   <div class="search-wrap">
     <input id="search" type="search" placeholder="חיפוש ספר, מחבר או נושא..." autocomplete="off">
   </div>
+  <div class="filter-row">
+    <button id="unlistened-toggle" class="filter-toggle" type="button">רק מה שלא האזנתי</button>
+  </div>
   <div class="chips" id="chips"></div>
 </div>
 
@@ -163,6 +172,13 @@ footer {
 const AUDIO_BASE = 'https://pub-a84d5c2b24fc4854975018d2fa1f6bcd.r2.dev/audio/';
 const audioFile = id => AUDIO_BASE + String(id).padStart(3, '0') + '.mp3';
 const AVAILABLE = new Set(BOOKS.filter(b => b.audio).map(b => b.id));
+
+// ---------- listened tracking (localStorage) ----------
+const LISTENED_KEY = 'listened_v1';
+let listenedSet = new Set();
+try { listenedSet = new Set(JSON.parse(localStorage.getItem(LISTENED_KEY) || '[]')); } catch (e) {}
+function saveListened() { try { localStorage.setItem(LISTENED_KEY, JSON.stringify([...listenedSet])); } catch (e) {} }
+let hideListened = false;
 
 const isHebrew = s => /[\u0590-\u05ff]/.test(s || '');
 
@@ -208,8 +224,7 @@ function buildPage() {
     mainEl.appendChild(sec);
     sectionEls[cat] = sec;
   });
-  document.getElementById('stats').textContent =
-    BOOKS.length + ' פריטים · ' + cats.length + ' קטגוריות · ' + AVAILABLE.size + ' הקלטות זמינות';
+  updateStats();
 }
 
 function makeCard(b) {
@@ -270,9 +285,32 @@ function makeCard(b) {
     badge.textContent = '🎧 ההקלטה בהפקה';
     foot.appendChild(badge);
   }
+  const lb = document.createElement('button');
+  lb.className = 'listened-btn';
+  lb.type = 'button';
+  function syncListened() {
+    const on = listenedSet.has(b.id);
+    card.classList.toggle('listened', on);
+    lb.classList.toggle('active', on);
+    lb.textContent = on ? '✓ האזנתי' : 'סמן כהאזנה';
+    lb.setAttribute('aria-pressed', on ? 'true' : 'false');
+  }
+  lb.onclick = () => {
+    if (listenedSet.has(b.id)) listenedSet.delete(b.id); else listenedSet.add(b.id);
+    saveListened(); syncListened(); updateStats();
+    if (hideListened) applyFilter();
+  };
+  syncListened();
+  foot.appendChild(lb);
   body.appendChild(foot);
   card.appendChild(body);
   return card;
+}
+
+function updateStats() {
+  document.getElementById('stats').textContent =
+    BOOKS.length + ' פריטים · ' + cats.length + ' קטגוריות · ' + AVAILABLE.size + ' הקלטות זמינות' +
+    (listenedSet.size ? ' · ' + listenedSet.size + ' סומנו כהאזנה' : '');
 }
 
 // ---------- covers: Open Library, lazy + cached ----------
@@ -328,6 +366,12 @@ async function loadCover(coverEl) {
 // ---------- filter ----------
 const searchEl = document.getElementById('search');
 searchEl.addEventListener('input', applyFilter);
+const unlistenedBtn = document.getElementById('unlistened-toggle');
+unlistenedBtn.addEventListener('click', () => {
+  hideListened = !hideListened;
+  unlistenedBtn.classList.toggle('active', hideListened);
+  applyFilter();
+});
 
 function applyFilter() {
   const q = searchEl.value.trim().toLowerCase();
@@ -336,7 +380,7 @@ function applyFilter() {
     if (activeCat && sec.dataset.cat !== activeCat) { sec.classList.add('hidden'); return; }
     let visible = 0;
     sec.querySelectorAll('.card').forEach(card => {
-      const show = !q || card.dataset.search.includes(q);
+      const show = (!q || card.dataset.search.includes(q)) && !(hideListened && listenedSet.has(+card.dataset.id));
       card.classList.toggle('hidden', !show);
       if (show) visible++;
     });
