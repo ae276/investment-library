@@ -171,6 +171,7 @@ footer {
 <script src="books.js"></script>
 <script>
 const AUDIO_BASE = 'https://pub-a84d5c2b24fc4854975018d2fa1f6bcd.r2.dev/audio/';
+const COVER_BASE = 'https://pub-a84d5c2b24fc4854975018d2fa1f6bcd.r2.dev/covers/';
 const audioFile = id => AUDIO_BASE + String(id).padStart(3, '0') + '.mp3';
 const AVAILABLE = new Set(BOOKS.filter(b => b.audio).map(b => b.id));
 
@@ -237,12 +238,27 @@ function makeCard(b) {
 
   const cover = document.createElement('div');
   cover.className = 'cover';
-  const ph = document.createElement('div');
-  ph.className = 'placeholder';
-  ph.textContent = b.book;
-  cover.appendChild(ph);
+  if (b.cover) {
+    const img = document.createElement('img');
+    img.alt = '';
+    img.loading = 'lazy';
+    img.src = COVER_BASE + b.cover;
+    img.onerror = () => {
+      img.remove();
+      const ph = document.createElement('div');
+      ph.className = 'placeholder';
+      ph.textContent = b.book;
+      cover.appendChild(ph);
+    };
+    cover.appendChild(img);
+  } else {
+    const ph = document.createElement('div');
+    ph.className = 'placeholder';
+    ph.textContent = b.book;
+    cover.appendChild(ph);
+    lazyCover(cover, b);
+  }
   card.appendChild(cover);
-  lazyCover(cover, b);
 
   const body = document.createElement('div');
   body.className = 'card-body';
