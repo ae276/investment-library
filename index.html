@@ -157,7 +157,7 @@ footer {
 
 <script src="books.js"></script>
 <script>
-const AUDIO_BASE = 'audio/';
+const AUDIO_BASE = 'https://pub-a84d5c2b24fc4854975018d2fa1f6bcd.r2.dev/audio/';
 const audioFile = id => AUDIO_BASE + String(id).padStart(3, '0') + '.mp3';
 const AVAILABLE = new Set(BOOKS.filter(b => b.audio).map(b => b.id));
 
