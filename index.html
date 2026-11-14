@@ -374,8 +374,10 @@ async function loadCover(coverEl) {
         }
       } catch (e) {}
     }
-    coverCache[id] = url;
-    try { localStorage.setItem(COVER_CACHE_KEY, JSON.stringify(coverCache)); } catch (e) {}
+    if (url) {
+      coverCache[id] = url;
+      try { localStorage.setItem(COVER_CACHE_KEY, JSON.stringify(coverCache)); } catch (e) {}
+    }
   }
   if (coverCache[id]) {
     const img = document.createElement('img');
